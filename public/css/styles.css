@@ -1,0 +1,13 @@
+body{
+    background-color:#E8ECEF;
+}
+.centered{
+    padding-top:20%;
+    text-align:center;
+}
+.secret-task{
+    text-align: center;
+    font-size:2rem;
+    color:#fff;
+    background-color: #000;
+}
