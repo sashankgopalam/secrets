@@ -15,7 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use(cookieParser());
 
-mongoose.connect("mongodb://localhost:27017/secrets");
+mongoose.connect("mongodb+srv://sashankgopalam:n9Pv91YNnFdqThuq@todolistsample.eg5h3tx.mongodb.net/?retryWrites=true&w=majority&appName=todolistsample");
 
 const userSchema = new mongoose.Schema({
   name: String,
