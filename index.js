@@ -30,11 +30,9 @@ function isValidEmail(email) {
   return re.test(email);
 }
 
-
 function isValidPassword(password) {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,8}$/.test(password);
 }
-
 
 function authenticateToken(req, res, next) {
   const token = req.cookies.token;
@@ -53,58 +51,59 @@ app.get("/", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  res.render("register");
+  res.render("register", { error: null });
 });
 
 app.post("/register", async (req, res) => {
   const { name, username, password } = req.body;
 
   if (!isValidEmail(username)) {
-    return res.send("Invalid email format.");
+    return res.render("register", { error: "Invalid email format." });
   }
 
   if (!isValidPassword(password)) {
-    return res.send("Password must be 6–8 characters, include uppercase, lowercase, and a number.");
+    return res.render("register", { error: "Password must be 6–8 characters, include uppercase, lowercase, and a number." });
   }
 
   try {
+    const existingUser = await User.findOne({ email: username });
+    if (existingUser) {
+      return res.render("register", { error: "User already exists." });
+    }
+
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-    const newUser = new User({
-      name,
-      email: username,
-      password: hashedPassword
-    });
+    const newUser = new User({ name, email: username, password: hashedPassword });
     await newUser.save();
     res.redirect("/login");
   } catch (err) {
     console.log(err);
-    res.send("Error during registration.");
+    res.render("register", { error: "Error during registration." });
   }
 });
 
 app.get("/login", (req, res) => {
-  res.render("login");
+  res.render("login", { error: null, success: req.query.success || null });
 });
 
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   if (!isValidEmail(username)) {
-    return res.send("Invalid email format.");
+    return res.render("login", { error: "Invalid email format.", success: null });
   }
 
   try {
     const foundUser = await User.findOne({ email: username });
     if (foundUser && await bcrypt.compare(password, foundUser.password)) {
       const token = jwt.sign({ id: foundUser._id, name: foundUser.name, email: foundUser.email }, JWT_SECRET, { expiresIn: '1h' });
-      res.cookie('token', token, { httpOnly: true, secure: false }); // Set `secure: true` in production
+      res.cookie('token', token, { httpOnly: true, secure: false });
       res.redirect("/secrets");
     } else {
-      res.send("Invalid credentials.");
+      res.render("login", { error: "Invalid credentials.", success: null });
     }
   } catch (err) {
     console.log(err);
-    res.send("Login failed.");
+    res.render("login", { error: "Login failed.", success: null });
   }
 });
 
